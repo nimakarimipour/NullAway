@@ -13,7 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import net.ltgt.gradle.errorprone.CheckSeverity
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'edu.ucr.cs.riple:NullAwayAutoFixer:1.0-SNAPSHOT'
+    }
+}
 
 plugins {
   id 'java-library'
@@ -21,6 +32,14 @@ plugins {
   id 'jacoco'
   id 'com.github.nbaztec.coveralls-jacoco'
 }
+
+apply plugin: 'edu.ucr.cs.riple.plugin'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
@@ -52,6 +71,12 @@ dependencies {
     testImplementation deps.test.commonsLang3
     testImplementation project(":test-library-models")
     testImplementation deps.test.lombok
+
+    annotationProcessor "edu.ucr.cs.riple:nullaway:0.7.12-SNAPSHOT"
+
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+    errorprone "com.google.errorprone:error_prone_core:2.3.2"
+    errorproneJavac "com.google.errorprone:javac:9+181-r4173-1"
 }
 
 javadoc {
@@ -81,4 +106,18 @@ jacocoTestReport {
 
 coverallsJacoco {
     reportPath = "nullaway/build/reports/jacoco/test/jacocoTestReport.xml"
+}
+
+tasks.withType(JavaCompile) {
+    // remove the if condition if you want to run NullAway on test code
+    if (!name.toLowerCase().contains("test")) {
+        //options.errorprone.disableWarningsInGeneratedCode = true
+        options.errorprone.errorproneArgs += ["-XepDisableAllChecks",
+                                              "-Xep:NullAway:ERROR",
+                                              "-XepOpt:NullAway:AnnotatedPackages=com.uber.nullaway",
+                                              "-XepOpt:NullAway:AutoFix=true",
+                                              "-XepDisableAllWarnings"]
+//        "-XepOpt:NullAway:FixAnnotations=androidx.annotation.NonNull,androidx.annotation.Nullable",
+        options.compilerArgs << "-Xmaxerrs" << "100000"
+    }
 }
