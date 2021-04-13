@@ -16,14 +16,19 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
 
 plugins {
-  id 'java-library'
-  // For code coverage:
-  id 'jacoco'
-  id 'com.github.nbaztec.coveralls-jacoco'
+    id 'java-library'
+    // For code coverage:
+    id 'jacoco'
+    id 'com.github.nbaztec.coveralls-jacoco'
 }
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
+
+repositories{
+    mavenLocal()
+    mavenCentral()
+}
 
 dependencies {
     compileOnly deps.apt.autoValueAnnot
@@ -52,6 +57,12 @@ dependencies {
     testImplementation deps.test.commonsLang3
     testImplementation project(":test-library-models")
     testImplementation deps.test.lombok
+
+    annotationProcessor "edu.ucr.cs.riple:nullaway:0.7.12-SNAPSHOT"
+
+    compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+    errorprone "com.google.errorprone:error_prone_core:2.3.2"
+    errorproneJavac "com.google.errorprone:javac:9+181-r4173-1"
 }
 
 javadoc {
@@ -60,16 +71,16 @@ javadoc {
 
 
 test {
-  maxHeapSize = "1024m"
-  if (!JavaVersion.current().java9Compatible) {
-    jvmArgs "-Xbootclasspath/p:${configurations.errorproneJavac.asPath}"
-  }
+    maxHeapSize = "1024m"
+    if (!JavaVersion.current().java9Compatible) {
+        jvmArgs "-Xbootclasspath/p:${configurations.errorproneJavac.asPath}"
+    }
 }
 
 apply plugin: 'com.vanniktech.maven.publish'
 
 jacoco {
-  toolVersion = "0.8.2"
+    toolVersion = "0.8.2"
 }
 
 jacocoTestReport {
@@ -81,4 +92,17 @@ jacocoTestReport {
 
 coverallsJacoco {
     reportPath = "nullaway/build/reports/jacoco/test/jacocoTestReport.xml"
+}
+
+tasks.withType(JavaCompile) {
+    // remove the if condition if you want to run NullAway on test code
+    if (!name.toLowerCase().contains("test")) {
+        //options.errorprone.disableWarningsInGeneratedCode = true
+        options.errorprone.errorproneArgs += ["-XepDisableAllChecks",
+                                              "-Xep:NullAway:ERROR",
+                                              "-XepOpt:NullAway:AnnotatedPackages=com.uber.nullaway",
+                                              "-XepOpt:NullAway:AutoFix=true",
+                                              "-XepDisableAllWarnings"]
+        options.compilerArgs << "-Xmaxerrs" << "100000"
+    }
 }
