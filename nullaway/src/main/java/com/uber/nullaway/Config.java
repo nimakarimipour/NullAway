@@ -22,12 +22,12 @@
 
 package com.uber.nullaway;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableSet;
 import com.sun.tools.javac.code.Symbol;
 import java.util.Set;
-import javax.annotation.Nullable;
 
-/** Provides configuration parameters for the nullability checker. */
 public interface Config {
 
   /**
@@ -163,6 +163,7 @@ public interface Config {
    * @return the paths for Optional class. The list always contains the path of {@link
    *     java.util.Optional}.
    */
+  @Nullable
   Set<String> getOptionalClassPaths();
 
   /**
@@ -205,6 +206,7 @@ public interface Config {
    *
    * @return the regex to extract jar name from the JarInfer model jar's path.
    */
+  @Nullable
   String getJarInferRegexStripModelJarName();
 
   /**
@@ -212,6 +214,7 @@ public interface Config {
    *
    * @return the regex to extract jar name from the classfile jar's path.
    */
+  @Nullable
   String getJarInferRegexStripCodeJarName();
 
   /**
@@ -219,6 +222,7 @@ public interface Config {
    *
    * @return the URL to show with NullAway error messages
    */
+  @Nullable
   String getErrorURL();
 
   /**

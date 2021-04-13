@@ -1,5 +1,7 @@
 package com.uber.nullaway.handlers.contract;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Function;
 import com.google.errorprone.VisitorState;
 import com.sun.source.tree.Tree;
@@ -9,7 +11,6 @@ import com.uber.nullaway.NullAway;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** An utility class for {@link ContractHandler} and {@link ContractCheckHandler}. */
 public class ContractUtils {
 
   /**
@@ -18,7 +19,7 @@ public class ContractUtils {
    * @param fieldNames A set of raw class field names.
    * @return A set of trimmed field names.
    */
-  public static Set<String> trimReceivers(Set<String> fieldNames) {
+  public static Set<String> trimReceivers(@Nullable Set<String> fieldNames) {
     return fieldNames
         .stream()
         .map((Function<String, String>) input -> input.substring(input.lastIndexOf(".") + 1))

@@ -16,6 +16,8 @@
 
 package com.uber.nullaway.dataflow;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Sets.intersection;
 
@@ -36,9 +38,6 @@ import org.checkerframework.dataflow.cfg.node.FieldAccessNode;
 import org.checkerframework.dataflow.cfg.node.LocalVariableNode;
 import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
 
-/**
- * Highly based on {@link com.google.errorprone.dataflow.LocalStore}, but for {@link AccessPath}s.
- */
 public class NullnessStore implements Store<NullnessStore> {
 
   private static final NullnessStore EMPTY = new NullnessStore(ImmutableMap.of());
@@ -258,7 +257,7 @@ public class NullnessStore implements Store<NullnessStore> {
      * @param value fact for access path
      * @return the new builder
      */
-    public NullnessStore.Builder setInformation(AccessPath ap, Nullness value) {
+    public NullnessStore.Builder setInformation(AccessPath ap, @Nullable Nullness value) {
       contents.put(checkNotNull(ap), checkNotNull(value));
       return this;
     }

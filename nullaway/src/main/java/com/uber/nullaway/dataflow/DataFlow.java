@@ -18,6 +18,8 @@
 
 package com.uber.nullaway.dataflow;
 
+import javax.annotation.Nullable;
+
 import static com.uber.nullaway.NullabilityUtil.findEnclosingMethodOrLambdaOrInitializer;
 
 import com.google.auto.value.AutoValue;
@@ -37,7 +39,6 @@ import com.sun.source.util.TreePath;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
 import com.uber.nullaway.NullabilityUtil;
-import javax.annotation.Nullable;
 import javax.annotation.processing.ProcessingEnvironment;
 import org.checkerframework.dataflow.analysis.AbstractValue;
 import org.checkerframework.dataflow.analysis.Analysis;
@@ -50,12 +51,6 @@ import org.checkerframework.dataflow.cfg.CFGBuilder;
 import org.checkerframework.dataflow.cfg.ControlFlowGraph;
 import org.checkerframework.dataflow.cfg.UnderlyingAST;
 
-/**
- * Provides a wrapper around {@link org.checkerframework.dataflow.analysis.Analysis}.
- *
- * <p>Modified from Error Prone code for more aggressive caching, and to avoid static state. See
- * {@link com.google.errorprone.dataflow.DataFlow}
- */
 public final class DataFlow {
 
   /*
@@ -141,7 +136,7 @@ public final class DataFlow {
    * analysis result is the same.
    */
   private <A extends AbstractValue<A>, S extends Store<S>, T extends ForwardTransferFunction<A, S>>
-      Result<A, S, T> dataflow(TreePath path, Context context, T transfer) {
+      Result<A, S, T> dataflow(@Nullable TreePath path, Context context, @Nullable T transfer) {
     final ProcessingEnvironment env = JavacProcessingEnvironment.instance(context);
     final ControlFlowGraph cfg = cfgCache.getUnchecked(CfgParams.create(path, env));
     final AnalysisParams aparams = AnalysisParams.create(transfer, cfg);
@@ -192,7 +187,7 @@ public final class DataFlow {
    */
   @Nullable
   public <A extends AbstractValue<A>, S extends Store<S>, T extends ForwardTransferFunction<A, S>>
-      A expressionDataflow(TreePath exprPath, Context context, T transfer) {
+      A expressionDataflow(TreePath exprPath, Context context, @Nullable T transfer) {
     AnalysisResult<A, S> analysisResult = resultForExpr(exprPath, context, transfer);
     return analysisResult == null ? null : analysisResult.getValue(exprPath.getLeaf());
   }
@@ -243,7 +238,7 @@ public final class DataFlow {
 
   @Nullable
   <A extends AbstractValue<A>, S extends Store<S>, T extends ForwardTransferFunction<A, S>>
-      AnalysisResult<A, S> resultForExpr(TreePath exprPath, Context context, T transfer) {
+      AnalysisResult<A, S> resultForExpr(TreePath exprPath, Context context, @Nullable T transfer) {
     final Tree leaf = exprPath.getLeaf();
     Preconditions.checkArgument(
         leaf instanceof ExpressionTree,
@@ -253,8 +248,9 @@ public final class DataFlow {
     return resultFor(exprPath, context, transfer);
   }
 
+  @Nullable
   private <A extends AbstractValue<A>, S extends Store<S>, T extends ForwardTransferFunction<A, S>>
-      AnalysisResult<A, S> resultFor(TreePath exprPath, Context context, T transfer) {
+      AnalysisResult<A, S> resultFor(TreePath exprPath, Context context, @Nullable T transfer) {
     final TreePath enclosingPath =
         NullabilityUtil.findEnclosingMethodOrLambdaOrInitializer(exprPath);
     if (enclosingPath == null) {
@@ -285,14 +281,16 @@ public final class DataFlow {
   @AutoValue
   abstract static class CfgParams {
     // Should not be used for hashCode or equals
+    @Nullable
     private ProcessingEnvironment environment;
 
-    private static CfgParams create(TreePath codePath, ProcessingEnvironment environment) {
+    private static CfgParams create(@Nullable TreePath codePath, ProcessingEnvironment environment) {
       CfgParams cp = new AutoValue_DataFlow_CfgParams(codePath);
       cp.environment = environment;
       return cp;
     }
 
+    @Nullable
     ProcessingEnvironment environment() {
       return environment;
     }
@@ -304,7 +302,7 @@ public final class DataFlow {
   abstract static class AnalysisParams {
 
     private static AnalysisParams create(
-        ForwardTransferFunction<?, ?> transferFunction, ControlFlowGraph cfg) {
+        @Nullable ForwardTransferFunction<?, ?> transferFunction, ControlFlowGraph cfg) {
       AnalysisParams ap = new AutoValue_DataFlow_AnalysisParams(transferFunction, cfg);
       return ap;
     }

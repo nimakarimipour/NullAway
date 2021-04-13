@@ -22,6 +22,8 @@
 
 package com.uber.nullaway;
 
+import javax.annotation.Nullable;
+
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -31,9 +33,7 @@ import com.sun.tools.javac.code.Symbol;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
-/** abstract base class for null checker {@link Config} implementations */
 public abstract class AbstractConfig implements Config {
 
   /**
@@ -42,6 +42,7 @@ public abstract class AbstractConfig implements Config {
    * <p>When we see an invocation to a method of a class outside these packages, we optimistically
    * assume all parameters are @Nullable and the return value is @NonNull
    */
+  @Nullable
   protected Pattern annotatedPackages;
 
   /**
@@ -50,6 +51,7 @@ public abstract class AbstractConfig implements Config {
    * <p>Used to exclude a particular package that contains unannotated code within a larger,
    * properly annotated, package.
    */
+  @Nullable
   protected Pattern unannotatedSubPackages;
 
   /** Source code in these classes will not be analyzed for nullability issues */
@@ -60,6 +62,7 @@ public abstract class AbstractConfig implements Config {
    */
   @Nullable protected ImmutableSet<String> unannotatedClasses;
 
+  @Nullable
   protected Pattern fieldAnnotPattern;
 
   protected boolean isExhaustiveOverride;
@@ -74,6 +77,7 @@ public abstract class AbstractConfig implements Config {
 
   protected boolean handleTestAssertionLibraries;
 
+  @Nullable
   protected Set<String> optionalClassPaths;
 
   protected boolean assertsEnabled;
@@ -86,16 +90,21 @@ public abstract class AbstractConfig implements Config {
 
   protected boolean acknowledgeAndroidRecent;
 
+  @Nullable
   protected Set<MethodClassAndName> knownInitializers;
 
+  @Nullable
   protected Set<String> excludedClassAnnotations;
 
+  @Nullable
   protected Set<String> initializerAnnotations;
 
+  @Nullable
   protected Set<String> externalInitAnnotations;
 
   @Nullable protected String castToNonNullMethod;
 
+  @Nullable
   protected String autofixSuppressionComment;
 
   /** --- JarInfer configs --- */
@@ -103,9 +112,13 @@ public abstract class AbstractConfig implements Config {
 
   protected boolean jarInferUseReturnAnnotations;
 
+  @Nullable
   protected String jarInferRegexStripModelJarName;
+
+  @Nullable
   protected String jarInferRegexStripCodeJarName;
 
+  @Nullable
   protected String errorURL;
 
   protected static Pattern getPackagePattern(Set<String> packagePrefixes) {
@@ -207,7 +220,7 @@ public abstract class AbstractConfig implements Config {
     return handleTestAssertionLibraries;
   }
 
-  @Override
+  @Override@Nullable
   public Set<String> getOptionalClassPaths() {
     return optionalClassPaths;
   }
@@ -271,17 +284,17 @@ public abstract class AbstractConfig implements Config {
     return jarInferUseReturnAnnotations;
   }
 
-  @Override
+  @Override@Nullable
   public String getJarInferRegexStripModelJarName() {
     return jarInferRegexStripModelJarName;
   }
 
-  @Override
+  @Override@Nullable
   public String getJarInferRegexStripCodeJarName() {
     return jarInferRegexStripCodeJarName;
   }
 
-  @Override
+  @Override@Nullable
   public String getErrorURL() {
     return errorURL;
   }

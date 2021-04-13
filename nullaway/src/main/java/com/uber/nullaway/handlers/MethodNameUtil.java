@@ -1,5 +1,7 @@
 package com.uber.nullaway.handlers;
 
+import com.uber.nullaway.Initializer;
+
 /*
  * Copyright (c) 2019 Uber Technologies, Inc.
  *
@@ -28,12 +30,6 @@ import com.sun.tools.javac.util.Name;
 import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
 import org.checkerframework.dataflow.cfg.node.Node;
 
-/**
- * A utility class that holds the names from the Table. Currently, {@link
- * com.uber.nullaway.handlers.AssertionHandler} requires it, while {@link
- * com.uber.nullaway.handlers.OptionalEmptinessHandler} uses it only when AssertionHandler is
- * enabled.
- */
 class MethodNameUtil {
 
   // Strings corresponding to the names of the methods (and their owners) used to identify
@@ -81,6 +77,7 @@ class MethodNameUtil {
   private Name notNullValueMatcher;
   private Name nullValueMatcher;
 
+  @Initializer
   void initializeMethodNames(Name.Table table) {
     isNotNull = table.fromString(IS_NOT_NULL_METHOD);
     isNotNullOwner = table.fromString(IS_NOT_NULL_OWNER);

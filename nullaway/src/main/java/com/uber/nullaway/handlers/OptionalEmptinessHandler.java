@@ -21,6 +21,8 @@
  */
 package com.uber.nullaway.handlers;
 
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.util.ASTHelpers;
@@ -44,7 +46,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -56,13 +57,11 @@ import javax.lang.model.type.TypeMirror;
 import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
 import org.checkerframework.dataflow.cfg.node.Node;
 
-/**
- * Handler to better handle {@code isPresent()} methods in code generated for Optionals. With this
- * handler, we learn appropriate Emptiness facts about the relevant property from these calls.
- */
 public class OptionalEmptinessHandler extends BaseNoOpHandler {
 
   @Nullable private ImmutableSet<Type> optionalTypes;
+
+  @Nullable
   private NullAway analysis;
 
   private final Config config;

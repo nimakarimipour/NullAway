@@ -1,4 +1,8 @@
 package com.uber.nullaway.handlers.stream;
+
+import javax.annotation.Nullable;
+
+import com.uber.nullaway.Initializer;
 /*
  * Copyright (c) 2017 Uber Technologies, Inc.
  *
@@ -27,18 +31,11 @@ import com.google.errorprone.predicates.TypePredicate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Used to produce a new list of StreamTypeRecord models, where each model represents a class from a
- * stream-based API such as RxJava.
- *
- * <p>This class should be used as:
- *
- * <p>[...] models = StreamModelBuilder.start() // Start the builder .addStreamType(...) // Add a
- * type filter matching a stream type .withX(...) // Model the type methods ... .end();
- */
 public class StreamModelBuilder {
 
   private final List<StreamTypeRecord> typeRecords = new ArrayList<>();
+
+  @Nullable
   private TypePredicate tp = null;
   private ImmutableSet.Builder<String> filterMethodSigs;
   private ImmutableSet.Builder<String> filterMethodSimpleNames;
@@ -78,6 +75,7 @@ public class StreamModelBuilder {
    * @param tp A type predicate matching the class/interface of the type in our stream-based API.
    * @return This builder (for chaining).
    */
+  @Initializer
   public StreamModelBuilder addStreamType(TypePredicate tp) {
     finalizeOpenStreamTypeRecord();
     this.tp = tp;

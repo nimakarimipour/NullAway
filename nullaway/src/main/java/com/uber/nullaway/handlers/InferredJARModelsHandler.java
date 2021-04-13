@@ -22,6 +22,8 @@
 
 package com.uber.nullaway.handlers;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -55,7 +57,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeKind;
 import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
 
-/** This handler loads inferred nullability model from stubs for methods in unannotated packages. */
 public class InferredJARModelsHandler extends BaseNoOpHandler {
   private static boolean DEBUG = false;
   private static boolean VERBOSE = false;
@@ -281,6 +282,7 @@ public class InferredJARModelsHandler extends BaseNoOpHandler {
     return true;
   }
 
+  @Nullable
   private Map<Integer, Set<String>> lookupMethodInCache(String className, String methodSign) {
     if (!argAnnotCache.containsKey(className)) return null;
     Map<Integer, Set<String>> methodArgAnnotations = argAnnotCache.get(className).get(methodSign);

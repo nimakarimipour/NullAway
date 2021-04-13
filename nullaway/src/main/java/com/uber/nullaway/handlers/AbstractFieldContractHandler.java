@@ -22,6 +22,8 @@
 
 package com.uber.nullaway.handlers;
 
+import javax.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.util.ASTHelpers;
@@ -33,16 +35,10 @@ import com.uber.nullaway.NullabilityUtil;
 import com.uber.nullaway.handlers.contract.ContractUtils;
 import java.util.Collections;
 import java.util.Set;
-import javax.annotation.Nullable;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 
-/**
- * Abstract base class for handlers that process pre- and post-condition annotations for fields.
- * Note: all fields that are going to be processed must be the fields of the receiver. (e.g. field
- * or this.field)
- */
 public abstract class AbstractFieldContractHandler extends BaseNoOpHandler {
 
   protected static final String THIS_NOTATION = "this.";
@@ -134,7 +130,7 @@ public abstract class AbstractFieldContractHandler extends BaseNoOpHandler {
    * @return Returns true, if the annotation conforms to the syntax rules.
    */
   protected boolean validateAnnotationSyntax(
-      Set<String> content,
+      @Nullable Set<String> content,
       NullAway analysis,
       MethodTree tree,
       VisitorState state,

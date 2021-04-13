@@ -22,6 +22,8 @@
 
 package com.uber.nullaway;
 
+import javax.annotation.Nullable;
+
 import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
 import static com.sun.source.tree.Tree.Kind.EXPRESSION_STATEMENT;
 import static com.sun.source.tree.Tree.Kind.IDENTIFIER;
@@ -101,7 +103,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.annotation.Nullable;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -112,34 +113,6 @@ import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
 import org.checkerframework.javacutil.ElementUtils;
 import org.checkerframework.javacutil.TreeUtils;
 
-/**
- * Checker for nullability errors. It assumes that any field, method parameter, or return type that
- * may be null is annotated with {@link Nullable}, and then checks the following rules:
- *
- * <ul>
- *   <li>no assignment of a nullable expression into a non-null field
- *   <li>no passing a nullable expression into a non-null parameter
- *   <li>no returning a nullable expression from a method with non-null return type
- *   <li>no field access or method invocation on an expression that is nullable
- * </ul>
- *
- * <p>This checker also detects errors related to field initialization. For any @NonNull instance
- * field <code>f</code>, this checker ensures that at least one of the following cases holds:
- *
- * <ol>
- *   <li><code>f</code> is directly initialized at its declaration
- *   <li><code>f</code> is always initialized in all constructors
- *   <li><code>f</code> is always initialized in some method annotated with @Initializer
- * </ol>
- *
- * <p>For any @NonNull static field <code>f</code>, this checker ensures that at least one of the
- * following cases holds:
- *
- * <ol>
- *   <li><code>f</code> is directly initialized at its declaration
- *   <li><code>f</code> is always initialized in some static initializer block
- * </ol>
- */
 @AutoService(BugChecker.class)
 @BugPattern(
     name = "NullAway",
@@ -2115,7 +2088,7 @@ public class NullAway extends BugChecker
    * @param e an expression
    * @return computed nullness for e, if any, else Nullable
    */
-  public Nullness getComputedNullness(ExpressionTree e) {
+  public Nullness getComputedNullness(@Nullable ExpressionTree e) {
     if (computedNullnessMap.containsKey(e)) {
       return computedNullnessMap.get(e);
     } else {
