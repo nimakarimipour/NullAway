@@ -21,12 +21,12 @@ package com.uber.nullaway.handlers;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.util.Name;
 import org.checkerframework.dataflow.cfg.node.MethodInvocationNode;
 import org.checkerframework.dataflow.cfg.node.Node;
+import com.uber.nullaway.Initializer;
 
 /**
  * A utility class that holds the names from the Table. Currently, {@link
@@ -36,142 +36,153 @@ import org.checkerframework.dataflow.cfg.node.Node;
  */
 class MethodNameUtil {
 
-  // Strings corresponding to the names of the methods (and their owners) used to identify
-  // assertions in this handler.
-  private static final String IS_NOT_NULL_METHOD = "isNotNull";
-  private static final String IS_NOT_NULL_OWNER = "com.google.common.truth.Subject";
-  private static final String IS_TRUE_METHOD = "isTrue";
-  private static final String IS_TRUE_OWNER = "com.google.common.truth.BooleanSubject";
-  private static final String ASSERT_THAT_METHOD = "assertThat";
-  private static final String ASSERT_THAT_OWNER = "com.google.common.truth.Truth";
+    // Strings corresponding to the names of the methods (and their owners) used to identify
+    // assertions in this handler.
+    private static final String IS_NOT_NULL_METHOD = "isNotNull";
 
-  private static final String HAMCREST_ASSERT_CLASS = "org.hamcrest.MatcherAssert";
-  private static final String JUNIT_ASSERT_CLASS = "org.junit.Assert";
+    private static final String IS_NOT_NULL_OWNER = "com.google.common.truth.Subject";
 
-  private static final String MATCHERS_CLASS = "org.hamcrest.Matchers";
-  private static final String CORE_MATCHERS_CLASS = "org.hamcrest.CoreMatchers";
-  private static final String CORE_IS_NULL_CLASS = "org.hamcrest.core.IsNull";
-  private static final String IS_MATCHER = "is";
-  private static final String NOT_MATCHER = "not";
-  private static final String NOT_NULL_VALUE_MATCHER = "notNullValue";
-  private static final String NULL_VALUE_MATCHER = "nullValue";
+    private static final String IS_TRUE_METHOD = "isTrue";
 
-  // Names of the methods (and their owners) used to identify assertions in this handler. Name used
-  // here refers to com.sun.tools.javac.util.Name. Comparing methods using Names is faster than
-  // comparing using strings.
-  private Name isNotNull;
-  private Name isNotNullOwner;
+    private static final String IS_TRUE_OWNER = "com.google.common.truth.BooleanSubject";
 
-  private Name isTrue;
-  private Name isTrueOwner;
+    private static final String ASSERT_THAT_METHOD = "assertThat";
 
-  private Name assertThat;
-  private Name assertThatOwner;
+    private static final String ASSERT_THAT_OWNER = "com.google.common.truth.Truth";
 
-  // Names for junit assertion libraries.
-  private Name hamcrestAssertClass;
-  private Name junitAssertClass;
+    private static final String HAMCREST_ASSERT_CLASS = "org.hamcrest.MatcherAssert";
 
-  // Names for hamcrest matchers.
-  private Name matchersClass;
-  private Name coreMatchersClass;
-  private Name coreIsNullClass;
-  private Name isMatcher;
-  private Name notMatcher;
-  private Name notNullValueMatcher;
-  private Name nullValueMatcher;
+    private static final String JUNIT_ASSERT_CLASS = "org.junit.Assert";
 
-  void initializeMethodNames(Name.Table table) {
-    isNotNull = table.fromString(IS_NOT_NULL_METHOD);
-    isNotNullOwner = table.fromString(IS_NOT_NULL_OWNER);
+    private static final String MATCHERS_CLASS = "org.hamcrest.Matchers";
 
-    isTrue = table.fromString(IS_TRUE_METHOD);
-    isTrueOwner = table.fromString(IS_TRUE_OWNER);
+    private static final String CORE_MATCHERS_CLASS = "org.hamcrest.CoreMatchers";
 
-    assertThat = table.fromString(ASSERT_THAT_METHOD);
-    assertThatOwner = table.fromString(ASSERT_THAT_OWNER);
+    private static final String CORE_IS_NULL_CLASS = "org.hamcrest.core.IsNull";
 
-    hamcrestAssertClass = table.fromString(HAMCREST_ASSERT_CLASS);
-    junitAssertClass = table.fromString(JUNIT_ASSERT_CLASS);
+    private static final String IS_MATCHER = "is";
 
-    matchersClass = table.fromString(MATCHERS_CLASS);
-    coreMatchersClass = table.fromString(CORE_MATCHERS_CLASS);
-    coreIsNullClass = table.fromString(CORE_IS_NULL_CLASS);
-    isMatcher = table.fromString(IS_MATCHER);
-    notMatcher = table.fromString(NOT_MATCHER);
-    notNullValueMatcher = table.fromString(NOT_NULL_VALUE_MATCHER);
-    nullValueMatcher = table.fromString(NULL_VALUE_MATCHER);
-  }
+    private static final String NOT_MATCHER = "not";
 
-  boolean isMethodIsNotNull(Symbol.MethodSymbol methodSymbol) {
-    return matchesMethod(methodSymbol, isNotNull, isNotNullOwner);
-  }
+    private static final String NOT_NULL_VALUE_MATCHER = "notNullValue";
 
-  boolean isMethodIsTrue(Symbol.MethodSymbol methodSymbol) {
-    return matchesMethod(methodSymbol, isTrue, isTrueOwner);
-  }
+    private static final String NULL_VALUE_MATCHER = "nullValue";
 
-  boolean isMethodAssertThat(Symbol.MethodSymbol methodSymbol) {
-    return matchesMethod(methodSymbol, assertThat, assertThatOwner);
-  }
+    // Names of the methods (and their owners) used to identify assertions in this handler. Name used
+    // here refers to com.sun.tools.javac.util.Name. Comparing methods using Names is faster than
+    // comparing using strings.
+    private Name isNotNull;
 
-  boolean isMethodHamcrestAssertThat(Symbol.MethodSymbol methodSymbol) {
-    return matchesMethod(methodSymbol, assertThat, hamcrestAssertClass);
-  }
+    private Name isNotNullOwner;
 
-  boolean isMethodJunitAssertThat(Symbol.MethodSymbol methodSymbol) {
-    return matchesMethod(methodSymbol, assertThat, junitAssertClass);
-  }
+    private Name isTrue;
 
-  boolean isMatcherIsNotNull(Node node) {
-    // Matches with
-    //   * is(not(nullValue()))
-    //   * is(notNullValue())
-    if (matchesMatcherMethod(node, isMatcher, matchersClass)
-        || matchesMatcherMethod(node, isMatcher, coreMatchersClass)) {
-      // All overloads of `is` method have exactly one argument.
-      return isMatcherNotNull(((MethodInvocationNode) node).getArgument(0));
+    private Name isTrueOwner;
+
+    private Name assertThat;
+
+    private Name assertThatOwner;
+
+    // Names for junit assertion libraries.
+    private Name hamcrestAssertClass;
+
+    private Name junitAssertClass;
+
+    // Names for hamcrest matchers.
+    private Name matchersClass;
+
+    private Name coreMatchersClass;
+
+    private Name coreIsNullClass;
+
+    private Name isMatcher;
+
+    private Name notMatcher;
+
+    private Name notNullValueMatcher;
+
+    private Name nullValueMatcher;
+
+    @Initializer()
+    void initializeMethodNames(Name.Table table) {
+        isNotNull = table.fromString(IS_NOT_NULL_METHOD);
+        isNotNullOwner = table.fromString(IS_NOT_NULL_OWNER);
+        isTrue = table.fromString(IS_TRUE_METHOD);
+        isTrueOwner = table.fromString(IS_TRUE_OWNER);
+        assertThat = table.fromString(ASSERT_THAT_METHOD);
+        assertThatOwner = table.fromString(ASSERT_THAT_OWNER);
+        hamcrestAssertClass = table.fromString(HAMCREST_ASSERT_CLASS);
+        junitAssertClass = table.fromString(JUNIT_ASSERT_CLASS);
+        matchersClass = table.fromString(MATCHERS_CLASS);
+        coreMatchersClass = table.fromString(CORE_MATCHERS_CLASS);
+        coreIsNullClass = table.fromString(CORE_IS_NULL_CLASS);
+        isMatcher = table.fromString(IS_MATCHER);
+        notMatcher = table.fromString(NOT_MATCHER);
+        notNullValueMatcher = table.fromString(NOT_NULL_VALUE_MATCHER);
+        nullValueMatcher = table.fromString(NULL_VALUE_MATCHER);
     }
-    return false;
-  }
 
-  private boolean isMatcherNotNull(Node node) {
-    // Matches with
-    //   * not(nullValue())
-    //   * notNullValue()
-    if (matchesMatcherMethod(node, notMatcher, matchersClass)
-        || matchesMatcherMethod(node, notMatcher, coreMatchersClass)) {
-      // All overloads of `not` method have exactly one argument.
-      return isMatcherNull(((MethodInvocationNode) node).getArgument(0));
+    boolean isMethodIsNotNull(Symbol.MethodSymbol methodSymbol) {
+        return matchesMethod(methodSymbol, isNotNull, isNotNullOwner);
     }
-    return matchesMatcherMethod(node, notNullValueMatcher, matchersClass)
-        || matchesMatcherMethod(node, notNullValueMatcher, coreMatchersClass)
-        || matchesMatcherMethod(node, notNullValueMatcher, coreIsNullClass);
-  }
 
-  private boolean isMatcherNull(Node node) {
-    // Matches with nullValue()
-    return matchesMatcherMethod(node, nullValueMatcher, matchersClass)
-        || matchesMatcherMethod(node, nullValueMatcher, coreMatchersClass)
-        || matchesMatcherMethod(node, nullValueMatcher, coreIsNullClass);
-  }
-
-  private boolean matchesMatcherMethod(Node node, Name matcherName, Name matcherClass) {
-    if (node instanceof MethodInvocationNode) {
-      MethodInvocationNode methodInvocationNode = (MethodInvocationNode) node;
-      Symbol.MethodSymbol callee = ASTHelpers.getSymbol(methodInvocationNode.getTree());
-      return matchesMethod(callee, matcherName, matcherClass);
+    boolean isMethodIsTrue(Symbol.MethodSymbol methodSymbol) {
+        return matchesMethod(methodSymbol, isTrue, isTrueOwner);
     }
-    return false;
-  }
 
-  private boolean matchesMethod(
-      Symbol.MethodSymbol methodSymbol, Name toMatchMethodName, Name toMatchOwnerName) {
-    return methodSymbol.name.equals(toMatchMethodName)
-        && methodSymbol.owner.getQualifiedName().equals(toMatchOwnerName);
-  }
+    boolean isMethodAssertThat(Symbol.MethodSymbol methodSymbol) {
+        return matchesMethod(methodSymbol, assertThat, assertThatOwner);
+    }
 
-  boolean isUtilInitialized() {
-    return isNotNull != null;
-  }
+    boolean isMethodHamcrestAssertThat(Symbol.MethodSymbol methodSymbol) {
+        return matchesMethod(methodSymbol, assertThat, hamcrestAssertClass);
+    }
+
+    boolean isMethodJunitAssertThat(Symbol.MethodSymbol methodSymbol) {
+        return matchesMethod(methodSymbol, assertThat, junitAssertClass);
+    }
+
+    boolean isMatcherIsNotNull(Node node) {
+        // Matches with
+        // * is(not(nullValue()))
+        // * is(notNullValue())
+        if (matchesMatcherMethod(node, isMatcher, matchersClass) || matchesMatcherMethod(node, isMatcher, coreMatchersClass)) {
+            // All overloads of `is` method have exactly one argument.
+            return isMatcherNotNull(((MethodInvocationNode) node).getArgument(0));
+        }
+        return false;
+    }
+
+    private boolean isMatcherNotNull(Node node) {
+        // Matches with
+        // * not(nullValue())
+        // * notNullValue()
+        if (matchesMatcherMethod(node, notMatcher, matchersClass) || matchesMatcherMethod(node, notMatcher, coreMatchersClass)) {
+            // All overloads of `not` method have exactly one argument.
+            return isMatcherNull(((MethodInvocationNode) node).getArgument(0));
+        }
+        return matchesMatcherMethod(node, notNullValueMatcher, matchersClass) || matchesMatcherMethod(node, notNullValueMatcher, coreMatchersClass) || matchesMatcherMethod(node, notNullValueMatcher, coreIsNullClass);
+    }
+
+    private boolean isMatcherNull(Node node) {
+        // Matches with nullValue()
+        return matchesMatcherMethod(node, nullValueMatcher, matchersClass) || matchesMatcherMethod(node, nullValueMatcher, coreMatchersClass) || matchesMatcherMethod(node, nullValueMatcher, coreIsNullClass);
+    }
+
+    private boolean matchesMatcherMethod(Node node, Name matcherName, Name matcherClass) {
+        if (node instanceof MethodInvocationNode) {
+            MethodInvocationNode methodInvocationNode = (MethodInvocationNode) node;
+            Symbol.MethodSymbol callee = ASTHelpers.getSymbol(methodInvocationNode.getTree());
+            return matchesMethod(callee, matcherName, matcherClass);
+        }
+        return false;
+    }
+
+    private boolean matchesMethod(Symbol.MethodSymbol methodSymbol, Name toMatchMethodName, Name toMatchOwnerName) {
+        return methodSymbol.name.equals(toMatchMethodName) && methodSymbol.owner.getQualifiedName().equals(toMatchOwnerName);
+    }
+
+    boolean isUtilInitialized() {
+        return isNotNull != null;
+    }
 }

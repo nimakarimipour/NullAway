@@ -19,7 +19,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package com.uber.nullaway;
 
 import com.google.auto.value.AutoValue;
@@ -33,266 +32,286 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-/** abstract base class for null checker {@link Config} implementations */
+/**
+ * abstract base class for null checker {@link Config} implementations
+ */
 public abstract class AbstractConfig implements Config {
 
-  /**
-   * Packages that we assume have appropriate nullability annotations.
-   *
-   * <p>When we see an invocation to a method of a class outside these packages, we optimistically
-   * assume all parameters are @Nullable and the return value is @NonNull
-   */
-  protected Pattern annotatedPackages;
+    /**
+     * Packages that we assume have appropriate nullability annotations.
+     *
+     * <p>When we see an invocation to a method of a class outside these packages, we optimistically
+     * assume all parameters are @Nullable and the return value is @NonNull
+     */
+    @Nullable()
+    protected Pattern annotatedPackages;
 
-  /**
-   * Sub-packages without appropriate nullability annotations.
-   *
-   * <p>Used to exclude a particular package that contains unannotated code within a larger,
-   * properly annotated, package.
-   */
-  protected Pattern unannotatedSubPackages;
+    /**
+     * Sub-packages without appropriate nullability annotations.
+     *
+     * <p>Used to exclude a particular package that contains unannotated code within a larger,
+     * properly annotated, package.
+     */
+    @Nullable()
+    protected Pattern unannotatedSubPackages;
 
-  /** Source code in these classes will not be analyzed for nullability issues */
-  @Nullable protected ImmutableSet<String> sourceClassesToExclude;
+    /**
+     * Source code in these classes will not be analyzed for nullability issues
+     */
+    @Nullable
+    protected ImmutableSet<String> sourceClassesToExclude;
 
-  /**
-   * these classes will be treated as unannotated (don't analyze *and* treat methods as unannotated)
-   */
-  @Nullable protected ImmutableSet<String> unannotatedClasses;
+    /**
+     * these classes will be treated as unannotated (don't analyze *and* treat methods as unannotated)
+     */
+    @Nullable
+    protected ImmutableSet<String> unannotatedClasses;
 
-  protected Pattern fieldAnnotPattern;
+    @Nullable()
+    protected Pattern fieldAnnotPattern;
 
-  protected boolean isExhaustiveOverride;
+    protected boolean isExhaustiveOverride;
 
-  protected boolean isSuggestSuppressions;
+    protected boolean isSuggestSuppressions;
 
-  protected boolean isAcknowledgeRestrictive;
+    protected boolean isAcknowledgeRestrictive;
 
-  protected boolean checkOptionalEmptiness;
+    protected boolean checkOptionalEmptiness;
 
-  protected boolean checkContracts;
+    protected boolean checkContracts;
 
-  protected boolean handleTestAssertionLibraries;
+    protected boolean handleTestAssertionLibraries;
 
-  protected Set<String> optionalClassPaths;
+    @Nullable()
+    protected Set<String> optionalClassPaths;
 
-  protected boolean assertsEnabled;
+    protected boolean assertsEnabled;
 
-  /**
-   * if true, {@link #fromAnnotatedPackage(Symbol.ClassSymbol)} will return false for any class
-   * annotated with {@link javax.annotation.Generated}
-   */
-  protected boolean treatGeneratedAsUnannotated;
+    /**
+     * if true, {@link #fromAnnotatedPackage(Symbol.ClassSymbol)} will return false for any class
+     * annotated with {@link javax.annotation.Generated}
+     */
+    protected boolean treatGeneratedAsUnannotated;
 
-  protected boolean acknowledgeAndroidRecent;
+    protected boolean acknowledgeAndroidRecent;
 
-  protected Set<MethodClassAndName> knownInitializers;
+    @Nullable()
+    protected Set<MethodClassAndName> knownInitializers;
 
-  protected Set<String> excludedClassAnnotations;
+    @Nullable()
+    protected Set<String> excludedClassAnnotations;
 
-  protected Set<String> initializerAnnotations;
+    @Nullable()
+    protected Set<String> initializerAnnotations;
 
-  protected Set<String> externalInitAnnotations;
+    @Nullable()
+    protected Set<String> externalInitAnnotations;
 
-  @Nullable protected String castToNonNullMethod;
+    @Nullable
+    protected String castToNonNullMethod;
 
-  protected String autofixSuppressionComment;
+    @Nullable()
+    protected String autofixSuppressionComment;
 
-  /** --- JarInfer configs --- */
-  protected boolean jarInferEnabled;
+    /**
+     * --- JarInfer configs ---
+     */
+    protected boolean jarInferEnabled;
 
-  protected boolean jarInferUseReturnAnnotations;
+    protected boolean jarInferUseReturnAnnotations;
 
-  protected String jarInferRegexStripModelJarName;
-  protected String jarInferRegexStripCodeJarName;
+    @Nullable()
+    protected String jarInferRegexStripModelJarName;
 
-  protected String errorURL;
+    @Nullable()
+    protected String jarInferRegexStripCodeJarName;
 
-  protected static Pattern getPackagePattern(Set<String> packagePrefixes) {
-    // noinspection ConstantConditions
-    String choiceRegexp =
-        Joiner.on("|")
-            .join(Iterables.transform(packagePrefixes, input -> input.replaceAll("\\.", "\\\\.")));
-    return Pattern.compile("^(?:" + choiceRegexp + ")(?:\\..*)?");
-  }
+    @Nullable()
+    protected String errorURL;
 
-  @Override
-  public boolean fromAnnotatedPackage(Symbol.ClassSymbol symbol) {
-    String className = symbol.getQualifiedName().toString();
-    return annotatedPackages.matcher(className).matches()
-        && !unannotatedSubPackages.matcher(className).matches()
-        && (!treatGeneratedAsUnannotated
-            || !ASTHelpers.hasDirectAnnotationWithSimpleName(symbol, "Generated"));
-  }
-
-  @Override
-  public boolean isExcludedClass(String className) {
-    if (sourceClassesToExclude == null) {
-      return false;
-    }
-    for (String classPrefix : sourceClassesToExclude) {
-      if (className.startsWith(classPrefix)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
-  public boolean isUnannotatedClass(Symbol.ClassSymbol symbol) {
-    if (unannotatedClasses == null) {
-      return false;
-    }
-    String className = symbol.getQualifiedName().toString();
-    for (String classPrefix : unannotatedClasses) {
-      if (className.startsWith(classPrefix)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @Override
-  public ImmutableSet<String> getExcludedClassAnnotations() {
-    return ImmutableSet.copyOf(excludedClassAnnotations);
-  }
-
-  @Override
-  public boolean isInitializerMethodAnnotation(String annotationName) {
-    return initializerAnnotations.contains(annotationName);
-  }
-
-  @Override
-  public boolean exhaustiveOverride() {
-    return isExhaustiveOverride;
-  }
-
-  @Override
-  public boolean isKnownInitializerMethod(Symbol.MethodSymbol methodSymbol) {
-    Symbol.ClassSymbol enclosingClass = ASTHelpers.enclosingClass(methodSymbol);
-    MethodClassAndName classAndName =
-        MethodClassAndName.create(
-            enclosingClass.getQualifiedName().toString(), methodSymbol.getSimpleName().toString());
-    return knownInitializers.contains(classAndName);
-  }
-
-  @Override
-  public boolean isExcludedFieldAnnotation(String annotationName) {
-    return Nullness.isNullableAnnotation(annotationName, this)
-        || (fieldAnnotPattern != null && fieldAnnotPattern.matcher(annotationName).matches());
-  }
-
-  @Override
-  public boolean suggestSuppressions() {
-    return isSuggestSuppressions;
-  }
-
-  @Override
-  public boolean acknowledgeRestrictiveAnnotations() {
-    return isAcknowledgeRestrictive;
-  }
-
-  @Override
-  public boolean checkOptionalEmptiness() {
-    return checkOptionalEmptiness;
-  }
-
-  @Override
-  public boolean checkContracts() {
-    return checkContracts;
-  }
-
-  @Override
-  public boolean handleTestAssertionLibraries() {
-    return handleTestAssertionLibraries;
-  }
-
-  @Override
-  public Set<String> getOptionalClassPaths() {
-    return optionalClassPaths;
-  }
-
-  @Override
-  public boolean assertsEnabled() {
-    return assertsEnabled;
-  }
-
-  @Override
-  @Nullable
-  public String getCastToNonNullMethod() {
-    return castToNonNullMethod;
-  }
-
-  @Override
-  public String getAutofixSuppressionComment() {
-    if (autofixSuppressionComment.trim().length() > 0) {
-      return "/* " + autofixSuppressionComment + " */ ";
-    } else {
-      return "";
-    }
-  }
-
-  @Override
-  public boolean isExternalInitClassAnnotation(String annotationName) {
-    return externalInitAnnotations.contains(annotationName);
-  }
-
-  protected Set<MethodClassAndName> getKnownInitializers(Set<String> qualifiedNames) {
-    Set<MethodClassAndName> result = new LinkedHashSet<>();
-    for (String name : qualifiedNames) {
-      int lastDot = name.lastIndexOf('.');
-      String methodName = name.substring(lastDot + 1);
-      String className = name.substring(0, lastDot);
-      result.add(MethodClassAndName.create(className, methodName));
-    }
-    return result;
-  }
-
-  @AutoValue
-  abstract static class MethodClassAndName {
-
-    static MethodClassAndName create(String enclosingClass, String methodName) {
-      return new AutoValue_AbstractConfig_MethodClassAndName(enclosingClass, methodName);
+    protected static Pattern getPackagePattern(Set<String> packagePrefixes) {
+        // noinspection ConstantConditions
+        String choiceRegexp = Joiner.on("|").join(Iterables.transform(packagePrefixes, input -> input.replaceAll("\\.", "\\\\.")));
+        return Pattern.compile("^(?:" + choiceRegexp + ")(?:\\..*)?");
     }
 
-    abstract String enclosingClass();
+    @Override
+    public boolean fromAnnotatedPackage(Symbol.ClassSymbol symbol) {
+        String className = symbol.getQualifiedName().toString();
+        return annotatedPackages.matcher(className).matches() && !unannotatedSubPackages.matcher(className).matches() && (!treatGeneratedAsUnannotated || !ASTHelpers.hasDirectAnnotationWithSimpleName(symbol, "Generated"));
+    }
 
-    abstract String methodName();
-  }
+    @Override
+    public boolean isExcludedClass(String className) {
+        if (sourceClassesToExclude == null) {
+            return false;
+        }
+        for (String classPrefix : sourceClassesToExclude) {
+            if (className.startsWith(classPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-  /** --- JarInfer configs --- */
-  @Override
-  public boolean isJarInferEnabled() {
-    return jarInferEnabled;
-  }
+    @Override
+    public boolean isUnannotatedClass(Symbol.ClassSymbol symbol) {
+        if (unannotatedClasses == null) {
+            return false;
+        }
+        String className = symbol.getQualifiedName().toString();
+        for (String classPrefix : unannotatedClasses) {
+            if (className.startsWith(classPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-  @Override
-  public boolean isJarInferUseReturnAnnotations() {
-    return jarInferUseReturnAnnotations;
-  }
+    @Override
+    public ImmutableSet<String> getExcludedClassAnnotations() {
+        return ImmutableSet.copyOf(excludedClassAnnotations);
+    }
 
-  @Override
-  public String getJarInferRegexStripModelJarName() {
-    return jarInferRegexStripModelJarName;
-  }
+    @Override
+    public boolean isInitializerMethodAnnotation(String annotationName) {
+        return initializerAnnotations.contains(annotationName);
+    }
 
-  @Override
-  public String getJarInferRegexStripCodeJarName() {
-    return jarInferRegexStripCodeJarName;
-  }
+    @Override
+    public boolean exhaustiveOverride() {
+        return isExhaustiveOverride;
+    }
 
-  @Override
-  public String getErrorURL() {
-    return errorURL;
-  }
+    @Override
+    public boolean isKnownInitializerMethod(Symbol.MethodSymbol methodSymbol) {
+        Symbol.ClassSymbol enclosingClass = ASTHelpers.enclosingClass(methodSymbol);
+        MethodClassAndName classAndName = MethodClassAndName.create(enclosingClass.getQualifiedName().toString(), methodSymbol.getSimpleName().toString());
+        return knownInitializers.contains(classAndName);
+    }
 
-  @Override
-  public boolean treatGeneratedAsUnannotated() {
-    return treatGeneratedAsUnannotated;
-  }
+    @Override
+    public boolean isExcludedFieldAnnotation(String annotationName) {
+        return Nullness.isNullableAnnotation(annotationName, this) || (fieldAnnotPattern != null && fieldAnnotPattern.matcher(annotationName).matches());
+    }
 
-  @Override
-  public boolean acknowledgeAndroidRecent() {
-    return acknowledgeAndroidRecent;
-  }
+    @Override
+    public boolean suggestSuppressions() {
+        return isSuggestSuppressions;
+    }
+
+    @Override
+    public boolean acknowledgeRestrictiveAnnotations() {
+        return isAcknowledgeRestrictive;
+    }
+
+    @Override
+    public boolean checkOptionalEmptiness() {
+        return checkOptionalEmptiness;
+    }
+
+    @Override
+    public boolean checkContracts() {
+        return checkContracts;
+    }
+
+    @Override
+    public boolean handleTestAssertionLibraries() {
+        return handleTestAssertionLibraries;
+    }
+
+    @Override
+    @Nullable()
+    public Set<String> getOptionalClassPaths() {
+        return optionalClassPaths;
+    }
+
+    @Override
+    public boolean assertsEnabled() {
+        return assertsEnabled;
+    }
+
+    @Override
+    @Nullable
+    public String getCastToNonNullMethod() {
+        return castToNonNullMethod;
+    }
+
+    @Override
+    public String getAutofixSuppressionComment() {
+        if (autofixSuppressionComment.trim().length() > 0) {
+            return "/* " + autofixSuppressionComment + " */ ";
+        } else {
+            return "";
+        }
+    }
+
+    @Override
+    public boolean isExternalInitClassAnnotation(String annotationName) {
+        return externalInitAnnotations.contains(annotationName);
+    }
+
+    protected Set<MethodClassAndName> getKnownInitializers(Set<String> qualifiedNames) {
+        Set<MethodClassAndName> result = new LinkedHashSet<>();
+        for (String name : qualifiedNames) {
+            int lastDot = name.lastIndexOf('.');
+            String methodName = name.substring(lastDot + 1);
+            String className = name.substring(0, lastDot);
+            result.add(MethodClassAndName.create(className, methodName));
+        }
+        return result;
+    }
+
+    @AutoValue
+    abstract static class MethodClassAndName {
+
+        static MethodClassAndName create(String enclosingClass, String methodName) {
+            return new AutoValue_AbstractConfig_MethodClassAndName(enclosingClass, methodName);
+        }
+
+        abstract String enclosingClass();
+
+        abstract String methodName();
+    }
+
+    /**
+     * --- JarInfer configs ---
+     */
+    @Override
+    public boolean isJarInferEnabled() {
+        return jarInferEnabled;
+    }
+
+    @Override
+    public boolean isJarInferUseReturnAnnotations() {
+        return jarInferUseReturnAnnotations;
+    }
+
+    @Override
+    @Nullable()
+    public String getJarInferRegexStripModelJarName() {
+        return jarInferRegexStripModelJarName;
+    }
+
+    @Override
+    @Nullable()
+    public String getJarInferRegexStripCodeJarName() {
+        return jarInferRegexStripCodeJarName;
+    }
+
+    @Override
+    @Nullable()
+    public String getErrorURL() {
+        return errorURL;
+    }
+
+    @Override
+    public boolean treatGeneratedAsUnannotated() {
+        return treatGeneratedAsUnannotated;
+    }
+
+    @Override
+    public boolean acknowledgeAndroidRecent() {
+        return acknowledgeAndroidRecent;
+    }
 }
