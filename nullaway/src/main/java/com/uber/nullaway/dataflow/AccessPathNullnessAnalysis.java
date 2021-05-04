@@ -333,6 +333,7 @@ public final class AccessPathNullnessAnalysis {
     NullnessStore store = dataFlow.resultBeforeExpr(exprPath, context, nullnessPropagation);
 
     // We use the CFG to get the Node corresponding to the expression
+    // todo: check here this might be a real bug.
     Set<Node> exprNodes =
         dataFlow
             .getControlFlowGraph(exprPath, context, nullnessPropagation)
