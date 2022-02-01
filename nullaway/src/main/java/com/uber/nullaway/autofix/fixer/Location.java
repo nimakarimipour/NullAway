@@ -62,7 +62,9 @@ public class Location implements SeperatedValueDisplay {
     this.kind = Kind.METHOD_PARAM;
     this.variableSymbol = (Symbol.VarSymbol) parameter;
     Symbol enclosingMethod = parameter;
-    while (enclosingMethod != null && enclosingMethod.getKind() != ElementKind.METHOD) {
+    while (enclosingMethod != null
+        && !(enclosingMethod.getKind() == ElementKind.METHOD
+            || enclosingMethod.getKind() == ElementKind.CONSTRUCTOR)) {
       enclosingMethod = enclosingMethod.owner;
     }
     Preconditions.checkNotNull(enclosingMethod);

@@ -1557,12 +1557,26 @@ public class NullAway extends BugChecker
       }
     }
     for (Element constructorElement : errorFieldsForInitializer.keySet()) {
+      Trees trees = getTreesInstance(state);
+      for (Element element : errorFieldsForInitializer.get(constructorElement)) {
+        if (config.getAutoFixConfig().canFixElement(trees, element)) {
+          Tree f = trees.getTree(element);
+          ErrorMessage errorMessage =
+              new ErrorMessage(
+                  MessageTypes.FIELD_NO_INIT,
+                  "initializer method does not guarantee @NonNull fields",
+                  true);
+          fixer.fix(errorMessage, ASTHelpers.getSymbol(f), state);
+        }
+      }
+
       errorBuilder.reportInitializerError(
           (Symbol.MethodSymbol) constructorElement,
           errMsgForInitializer(errorFieldsForInitializer.get(constructorElement), state),
           state,
-          buildDescription(getTreesInstance(state).getTree(constructorElement)));
+          buildDescription(trees.getTree(constructorElement)));
     }
+
     // For static fields
     Set<Symbol> notInitializedStaticFields = notInitializedStatic(entities, state);
     for (Symbol uninitSField : notInitializedStaticFields) {
@@ -1571,26 +1585,6 @@ public class NullAway extends BugChecker
       // anyways).
       errorBuilder.reportInitErrorOnField(
           uninitSField, state, buildDescription(getTreesInstance(state).getTree(uninitSField)));
-    }
-    if (config.autofixIsEnabled()) {
-      fixInitializationErrorsOnControlFlowPaths(state, errorFieldsForInitializer);
-    }
-  }
-
-  private void fixInitializationErrorsOnControlFlowPaths(
-      VisitorState state, SetMultimap<Element, Element> errorFieldsForInitializer) {
-    for (Element constructorElement : errorFieldsForInitializer.keySet()) {
-      for (Element element : errorFieldsForInitializer.get(constructorElement)) {
-        if (config.getAutoFixConfig().canFixElement(getTreesInstance(state), element)) {
-          Tree tree = getTreesInstance(state).getTree(element);
-          ErrorMessage errorMessage =
-              new ErrorMessage(
-                  MessageTypes.FIELD_NO_INIT,
-                  "initializer method does not guarantee @NonNull fields",
-                  true);
-          fixer.fix(errorMessage, ASTHelpers.getSymbol(tree), state);
-        }
-      }
     }
   }
 
