@@ -9,6 +9,7 @@ public class Fix extends EnclosingNode implements SeperatedValueDisplay {
   public Location location;
   public AnnotationFactory.Annotation annotation;
   public boolean inject;
+  public int index;
 
   @Override
   public boolean equals(Object o) {
@@ -53,7 +54,9 @@ public class Fix extends EnclosingNode implements SeperatedValueDisplay {
         + delimiter
         + (enclosingClass == null ? "null" : ASTHelpers.getSymbol(enclosingClass))
         + delimiter
-        + (enclosingMethod == null ? "null" : ASTHelpers.getSymbol(enclosingMethod));
+        + (enclosingMethod == null ? "null" : ASTHelpers.getSymbol(enclosingMethod))
+        + delimiter
+        + index;
   }
 
   public static String header(String delimiter) {
@@ -67,6 +70,8 @@ public class Fix extends EnclosingNode implements SeperatedValueDisplay {
         + delimiter
         + "rootClass"
         + delimiter
-        + "rootMethod";
+        + "rootMethod"
+        + delimiter
+        + "index";
   }
 }

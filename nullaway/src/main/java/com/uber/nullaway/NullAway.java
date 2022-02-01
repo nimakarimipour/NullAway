@@ -232,6 +232,8 @@ public class NullAway extends BugChecker
 
   private final Fixer fixer;
 
+  public static int index = 0;
+
   /**
    * Error Prone requires us to have an empty constructor for each Plugin, in addition to the
    * constructor taking an ErrorProneFlags object. This constructor should not be used anywhere

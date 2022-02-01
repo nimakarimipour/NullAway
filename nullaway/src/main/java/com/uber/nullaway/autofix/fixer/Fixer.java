@@ -4,6 +4,7 @@ import com.google.errorprone.VisitorState;
 import com.sun.tools.javac.code.Symbol;
 import com.uber.nullaway.Config;
 import com.uber.nullaway.ErrorMessage;
+import com.uber.nullaway.NullAway;
 import com.uber.nullaway.autofix.AutoFixConfig;
 import com.uber.nullaway.autofix.out.Fix;
 
@@ -26,6 +27,7 @@ public class Fixer {
       if (config.SUGGEST_DEEP) {
         fix.findEnclosing(state, errorMessage);
       }
+      fix.index = NullAway.index;
       config.WRITER.saveFix(fix);
     }
   }
